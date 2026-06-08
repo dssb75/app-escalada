@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#111827"/>
+  <text x="40" y="70" fill="#f8fafc" font-size="40" font-family="Arial">Casco de escalada</text>
+  <path d="M210 300 C220 190, 320 130, 430 130 C540 130, 640 190, 650 300" fill="#ef4444"/>
+  <rect x="190" y="300" width="480" height="40" rx="20" fill="#991b1b"/>
+  <path d="M300 340 Q400 430 500 340" fill="none" stroke="#fca5a5" stroke-width="12"/>
+  <circle cx="430" cy="245" r="26" fill="#fee2e2" opacity="0.3"/>
+</svg>

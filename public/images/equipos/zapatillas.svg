@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#1f2937"/>
+  <text x="40" y="70" fill="#f8fafc" font-size="40" font-family="Arial">Zapatillas de escalada</text>
+  <path d="M140 300 C230 310, 260 250, 370 260 C460 268, 500 320, 650 330 L650 380 L140 380 Z" fill="#f97316"/>
+  <rect x="140" y="378" width="510" height="22" fill="#111827"/>
+  <line x1="250" y1="290" x2="470" y2="320" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <line x1="255" y1="315" x2="460" y2="345" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+</svg>

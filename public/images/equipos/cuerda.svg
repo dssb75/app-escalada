@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#0b1020"/>
+  <text x="40" y="70" fill="#f8fafc" font-size="40" font-family="Arial">Cuerda dinamica 60m</text>
+  <path d="M130 150 C260 60, 420 90, 520 190 C620 290, 590 410, 480 430 C370 450, 280 370, 300 290 C320 210, 410 190, 460 240" fill="none" stroke="#22d3ee" stroke-width="20" stroke-linecap="round"/>
+  <path d="M130 185 C250 105, 390 125, 470 205" fill="none" stroke="#67e8f9" stroke-width="8" stroke-linecap="round"/>
+</svg>

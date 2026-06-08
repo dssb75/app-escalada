@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <rect width="800" height="500" fill="#0f172a"/>
+  <text x="40" y="70" fill="#f8fafc" font-size="40" font-family="Arial">Set mosquetones</text>
+  <g fill="none" stroke-width="16" stroke-linecap="round">
+    <path d="M260 150 C180 150, 160 330, 260 350 C360 370, 390 170, 290 150" stroke="#22c55e"/>
+    <path d="M500 140 C430 140, 410 320, 500 340 C600 360, 630 170, 540 140" stroke="#38bdf8"/>
+    <path d="M270 190 L320 220" stroke="#86efac"/>
+    <path d="M510 180 L555 205" stroke="#7dd3fc"/>
+  </g>
+</svg>
