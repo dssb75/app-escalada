@@ -1,4 +1,4 @@
-const BASE = '/api'
+const BASE = '/apis'
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('escalada_token')
