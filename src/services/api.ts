@@ -1,4 +1,4 @@
-const BASE = '/api'
+const BASE = ''
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('escalada_token')
@@ -24,7 +24,7 @@ async function handleErrorResponse(res: Response, fallbackMessage: string) {
 }
 
 export async function login(username: string, password: string) {
-  const res = await fetch(`${BASE}/api/auth/login`, {
+  const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
@@ -34,13 +34,13 @@ export async function login(username: string, password: string) {
 }
 
 export async function getEquipos() {
-  const res = await fetch(`${BASE}/api/equipos`, { headers: authHeaders() })
+  const res = await fetch(`${BASE}/equipos`, { headers: authHeaders() })
   if (!res.ok) throw new Error('Error fetching equipos')
   return res.json()
 }
 
 export async function reservarEquipo(equipo_id: number, fecha: string, email: string) {
-  const res = await fetch(`${BASE}/api/reservas/equipo`, {
+  const res = await fetch(`${BASE}/reservas/equipo`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({ equipo_id, fecha, email }),
@@ -52,13 +52,13 @@ export async function reservarEquipo(equipo_id: number, fecha: string, email: st
 }
 
 export async function getMisReservasEquipo() {
-  const res = await fetch(`${BASE}/api/reservas/equipo`, { headers: authHeaders() })
+  const res = await fetch(`${BASE}/reservas/equipo`, { headers: authHeaders() })
   if (!res.ok) throw new Error('Error fetching reservas de equipo')
   return res.json()
 }
 
 export async function cancelarReservaEquipo(id: number) {
-  const res = await fetch(`${BASE}/api/reservas/equipo?id=${id}`, {
+  const res = await fetch(`${BASE}/reservas/equipo?id=${id}`, {
     method: 'DELETE',
     headers: authHeaders(),
   })
@@ -69,19 +69,19 @@ export async function cancelarReservaEquipo(id: number) {
 }
 
 export async function getHorariosOcupados(fecha: string) {
-  const res = await fetch(`${BASE}/api/reservas/horario?fecha=${fecha}`, { headers: authHeaders() })
+  const res = await fetch(`${BASE}/reservas/horario?fecha=${fecha}`, { headers: authHeaders() })
   if (!res.ok) throw new Error('Error fetching horarios')
   return res.json()
 }
 
 export async function getMisReservasHorario() {
-  const res = await fetch(`${BASE}/api/reservas/horario`, { headers: authHeaders() })
+  const res = await fetch(`${BASE}/reservas/horario`, { headers: authHeaders() })
   if (!res.ok) throw new Error('Error fetching horarios')
   return res.json()
 }
 
 export async function reservarHorario(fecha: string, hora: string, email: string) {
-  const res = await fetch(`${BASE}/api/reservas/horario`, {
+  const res = await fetch(`${BASE}/reservas/horario`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({ fecha, hora, email }),
@@ -93,7 +93,7 @@ export async function reservarHorario(fecha: string, hora: string, email: string
 }
 
 export async function cancelarReservaHorario(id: number) {
-  const res = await fetch(`${BASE}/api/reservas/horario?id=${id}`, {
+  const res = await fetch(`${BASE}/reservas/horario?id=${id}`, {
     method: 'DELETE',
     headers: authHeaders(),
   })
