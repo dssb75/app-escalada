@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import * as api from '../services/api'
+import arnesImg from '../assets/Arnes-Singing-Rock-Dome-1-tiny.jpg'
+import cascoImg from '../assets/Casco-Escalada.jpg'
+import chalkBagImg from '../assets/Chalk-Bag.jpg'
+import cuerdaImg from '../assets/Cuerda.jpg'
+import mosquetonesImg from '../assets/Mosquetones.jpg'
+import zapatillasImg from '../assets/pies-de-gato-escalada-first-klimb-gris-jaspeado.jpg'
+import fallbackImg from '../assets/hero.png'
 
 interface Equipo {
   id: number
@@ -21,13 +28,13 @@ interface ReservaEquipo {
 
 function resolveEquipoImage(nombre: string): string {
   const n = nombre.toLowerCase()
-  if (n.includes('arn')) return '/images/equipos/arnes.svg'
-  if (n.includes('casco')) return '/images/equipos/casco.svg'
-  if (n.includes('zapat')) return '/images/equipos/zapatillas.svg'
-  if (n.includes('cuerda')) return '/images/equipos/cuerda.svg'
-  if (n.includes('chalk')) return '/images/equipos/chalkbag.svg'
-  if (n.includes('mosquet')) return '/images/equipos/mosquetones.svg'
-  return '/images/ui/equipo-card.svg'
+  if (n.includes('arn')) return arnesImg
+  if (n.includes('casco')) return cascoImg
+  if (n.includes('zapat')) return zapatillasImg
+  if (n.includes('cuerda')) return cuerdaImg
+  if (n.includes('chalk')) return chalkBagImg
+  if (n.includes('mosquet')) return mosquetonesImg
+  return fallbackImg
 }
 
 export default function Equipos() {
@@ -35,8 +42,9 @@ export default function Equipos() {
   const navigate = useNavigate()
   const [equipos, setEquipos] = useState<Equipo[]>([])
   const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<Equipo | null>(null)
+  const [pendingEquipos, setPendingEquipos] = useState<Equipo[]>([])
   const [fecha, setFecha] = useState('')
+  const [email, setEmail] = useState('')
   const [reservando, setReservando] = useState(false)
   const [misReservas, setMisReservas] = useState<ReservaEquipo[]>([])
   const [cancelandoId, setCancelandoId] = useState<number | null>(null)
@@ -50,25 +58,56 @@ export default function Equipos() {
         setEquipos(eq)
         setMisReservas(reservas)
       })
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message.includes('Sesion expirada')) {
+          logout();
+          navigate('/login')
+        } else {
+          showToast(err instanceof Error ? err.message : 'Error cargando equipos', false)
+        }
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [logout, navigate])
 
   const showToast = (msg: string, ok: boolean) => {
     setToast({ msg, ok })
     setTimeout(() => setToast(null), 3500)
   }
 
-  const handleReservar = async () => {
-    if (!selected || !fecha) return
+  const handleAgregarEquipo = (equipo: Equipo) => {
+    setPendingEquipos(current => {
+      if (current.some(item => item.id === equipo.id)) {
+        showToast('Ese equipo ya está agregado', false)
+        return current
+      }
+      showToast(`${equipo.nombre} agregado a la reserva`, true)
+      return [...current, equipo]
+    })
+  }
+
+  const handleQuitarEquipo = (equipoId: number) => {
+    setPendingEquipos(current => current.filter(item => item.id !== equipoId))
+  }
+
+  const handleConfirmarReservas = async () => {
+    if (pendingEquipos.length === 0 || !fecha || !email) return
     setReservando(true)
     try {
-      await api.reservarEquipo(selected.id, fecha)
-      showToast(`Reserva confirmada: ${selected.nombre} — ${fecha}`, true)
+      for (const equipo of pendingEquipos) {
+        await api.reservarEquipo(equipo.id, fecha, email)
+      }
+      showToast(`Reservas confirmadas: ${pendingEquipos.length} equipo(s) — ${fecha}`, true)
       const reservas = await api.getMisReservasEquipo()
       setMisReservas(reservas)
-      setSelected(null)
+      setPendingEquipos([])
       setFecha('')
+      setEmail('')
     } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('Sesion expirada')) {
+        logout()
+        navigate('/login')
+        return
+      }
       showToast(err instanceof Error ? err.message : 'Error al reservar', false)
     } finally {
       setReservando(false)
@@ -83,6 +122,11 @@ export default function Equipos() {
       setMisReservas(reservas)
       showToast('Reserva cancelada', true)
     } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('Sesion expirada')) {
+        logout()
+        navigate('/login')
+        return
+      }
       showToast(err instanceof Error ? err.message : 'Error al cancelar', false)
     } finally {
       setCancelandoId(null)
@@ -138,7 +182,7 @@ export default function Equipos() {
                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     onError={ev => {
                       const t = ev.target as HTMLImageElement
-                      t.src = '/images/ui/equipo-card.svg'
+                      t.src = fallbackImg
                     }}
                   />
                 </div>
@@ -149,18 +193,101 @@ export default function Equipos() {
                   <p style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '16px', marginTop: 0, lineHeight: 1.6 }}>
                     {e.descripcion}
                   </p>
-                  <button onClick={() => setSelected(e)} style={{
+                  <button onClick={() => handleAgregarEquipo(e)} style={{
                     width: '100%', padding: '9px',
                     background: '#f97316', border: 'none', borderRadius: '7px',
                     color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '13px',
                   }}>
-                    Reservar
+                    Agregar a reserva
                   </button>
                 </div>
               </div>
             ))}
           </div>
         )}
+
+        <section style={{ marginTop: '30px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', marginTop: 0 }}>
+            Reserva pendiente
+          </h3>
+
+          <div style={{
+            background: '#1f2937',
+            border: '1px solid #374151',
+            borderRadius: '10px',
+            padding: '20px',
+          }}>
+            {pendingEquipos.length === 0 ? (
+              <p style={{ color: '#6b7280', fontSize: '13px', marginTop: 0 }}>
+                Todavía no has agregado equipos. Usa “Agregar a reserva” en las tarjetas.
+              </p>
+            ) : (
+              <div style={{ display: 'grid', gap: '8px', marginBottom: '18px' }}>
+                {pendingEquipos.map(equipo => (
+                  <div key={equipo.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    gap: '10px', padding: '10px 12px',
+                    border: '1px solid #374151', borderRadius: '8px', background: '#111827',
+                  }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', color: '#f3f4f6', fontWeight: 600 }}>{equipo.nombre}</div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>{equipo.descripcion}</div>
+                    </div>
+                    <button onClick={() => handleQuitarEquipo(equipo.id)} style={{
+                      padding: '6px 10px', borderRadius: '6px', border: '1px solid #374151',
+                      background: 'transparent', color: '#fca5a5', fontSize: '12px', cursor: 'pointer',
+                    }}>
+                      Quitar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '14px',
+              marginBottom: '16px',
+            }}>
+              <div>
+                <label style={labelStyle}>Fecha de reserva</label>
+                <input
+                  type="date"
+                  value={fecha}
+                  min={today}
+                  onChange={e => setFecha(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Correo electrónico</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="tu-correo@ejemplo.com"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleConfirmarReservas}
+              disabled={pendingEquipos.length === 0 || !fecha || !email || reservando}
+              style={{
+                width: '100%', padding: '10px',
+                background: pendingEquipos.length > 0 && fecha && email && !reservando ? '#f97316' : '#374151',
+                border: 'none', borderRadius: '7px',
+                color: '#fff', fontWeight: 600,
+                cursor: pendingEquipos.length > 0 && fecha && email && !reservando ? 'pointer' : 'not-allowed',
+                fontSize: '13px',
+              }}
+            >
+              {reservando ? 'Confirmando reservas...' : `Confirmar ${pendingEquipos.length} reserva(s)`}
+            </button>
+          </div>
+        </section>
 
         <section style={{ marginTop: '30px' }}>
           <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', marginTop: 0 }}>Mis reservas de equipo</h3>
@@ -191,52 +318,6 @@ export default function Equipos() {
           )}
         </section>
       </main>
-
-      {/* Modal */}
-      {selected && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 100, padding: '16px',
-        }}>
-          <div style={{
-            background: '#1f2937', border: '1px solid #374151',
-            borderRadius: '10px', padding: '28px',
-            width: '100%', maxWidth: '360px',
-          }}>
-            <h3 style={{ marginTop: 0, marginBottom: '4px', fontSize: '17px', fontWeight: 700 }}>
-              {selected.nombre}
-            </h3>
-            <p style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '22px', marginTop: 0 }}>
-              Selecciona la fecha para tu reserva
-            </p>
-            <label style={labelStyle}>Fecha</label>
-            <input
-              type="date"
-              value={fecha}
-              min={today}
-              onChange={e => setFecha(e.target.value)}
-              style={{ ...inputStyle, marginBottom: '22px', colorScheme: 'dark' }}
-            />
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => { setSelected(null); setFecha('') }} style={{
-                flex: 1, padding: '10px',
-                background: 'transparent', border: '1px solid #374151',
-                borderRadius: '7px', color: '#9ca3af', cursor: 'pointer', fontSize: '13px',
-              }}>Cancelar</button>
-              <button onClick={handleReservar} disabled={!fecha || reservando} style={{
-                flex: 1, padding: '10px',
-                background: fecha && !reservando ? '#f97316' : '#374151',
-                border: 'none', borderRadius: '7px',
-                color: '#fff', fontWeight: 600,
-                cursor: fecha && !reservando ? 'pointer' : 'not-allowed', fontSize: '13px',
-              }}>
-                {reservando ? 'Reservando...' : 'Confirmar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {toast && (
         <div style={{

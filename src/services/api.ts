@@ -2,7 +2,25 @@ const BASE = 'http://localhost:8080'
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('escalada_token')
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+  return headers
+}
+
+async function handleErrorResponse(res: Response, fallbackMessage: string) {
+  if (res.status === 401) {
+    localStorage.removeItem('escalada_user')
+    localStorage.removeItem('escalada_token')
+    throw new Error('Sesion expirada, inicia sesion nuevamente')
+  }
+  try {
+    const err = await res.json()
+    throw new Error(err.error || fallbackMessage)
+  } catch {
+    throw new Error(fallbackMessage)
+  }
 }
 
 export async function login(username: string, password: string) {
@@ -21,15 +39,14 @@ export async function getEquipos() {
   return res.json()
 }
 
-export async function reservarEquipo(equipo_id: number, fecha: string) {
+export async function reservarEquipo(equipo_id: number, fecha: string, email: string) {
   const res = await fetch(`${BASE}/api/reservas/equipo`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ equipo_id, fecha }),
+    body: JSON.stringify({ equipo_id, fecha, email }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error || 'Error al reservar')
+    await handleErrorResponse(res, 'Error al reservar')
   }
   return res.json()
 }
@@ -46,8 +63,7 @@ export async function cancelarReservaEquipo(id: number) {
     headers: authHeaders(),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error || 'Error al cancelar reserva')
+    await handleErrorResponse(res, 'Error al cancelar reserva')
   }
   return res.json()
 }
@@ -64,15 +80,14 @@ export async function getMisReservasHorario() {
   return res.json()
 }
 
-export async function reservarHorario(fecha: string, hora: string) {
+export async function reservarHorario(fecha: string, hora: string, email: string) {
   const res = await fetch(`${BASE}/api/reservas/horario`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ fecha, hora }),
+    body: JSON.stringify({ fecha, hora, email }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error || 'Error al reservar')
+    await handleErrorResponse(res, 'Error al reservar')
   }
   return res.json()
 }
@@ -83,8 +98,7 @@ export async function cancelarReservaHorario(id: number) {
     headers: authHeaders(),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error || 'Error al cancelar horario')
+    await handleErrorResponse(res, 'Error al cancelar horario')
   }
   return res.json()
 }

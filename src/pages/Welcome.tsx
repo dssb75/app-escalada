@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import reservarEquipoImg from '../assets/Reservar-Equipo.jpg'
+import reservarHorarioImg from '../assets/Reservar-Horario.jpg'
 
 export default function Welcome() {
   const { user, logout } = useAuth()
@@ -8,7 +10,8 @@ export default function Welcome() {
   return (
     <div style={{
       minHeight: '100vh', width: '100%',
-      background: '#111827', color: '#f9fafb',
+      background: 'radial-gradient(circle at top, #1f2937 0%, #111827 55%, #0f172a 100%)',
+      color: '#f9fafb',
       fontFamily: "'Outfit', 'Segoe UI', system-ui, sans-serif",
     }}>
       <header style={{
@@ -31,11 +34,20 @@ export default function Welcome() {
       </header>
 
       <main style={{ padding: '36px 24px', maxWidth: '820px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px', color: '#f9fafb' }}>
-          Hola, {user?.nombre}
-        </h1>
-        <p style={{ color: '#6b7280', marginBottom: '32px', fontSize: '14px', marginTop: '4px' }}>
-          Selecciona una opción para continuar
+        <div style={{ marginBottom: '28px' }}>
+          <span style={{ color: '#f97316', fontSize: '12px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            Bienvenido
+          </span>
+          <h1 style={{ fontSize: '30px', fontWeight: 800, marginBottom: '8px', color: '#f9fafb', lineHeight: 1.1 }}>
+            Hola, {user?.nombre && !/administrador/i.test(user.nombre) ? user.nombre : 'Usuario'}
+          </h1>
+          <p style={{ color: '#cbd5e1', marginBottom: 0, fontSize: '14px', marginTop: 0, lineHeight: 1.6 }}>
+            Selecciona una opción para continuar con tus reservas de equipo o calendario.
+          </p>
+        </div>
+
+        <p style={{ color: '#94a3b8', marginBottom: '20px', fontSize: '14px', marginTop: 0 }}>
+          Accesos rápidos
         </p>
 
         <div style={{
@@ -45,9 +57,9 @@ export default function Welcome() {
         }}>
           <div onClick={() => navigate('/equipos')} style={cardStyle}>
             <img
-              src="/images/ui/equipo-card.svg"
+              src={reservarEquipoImg}
               alt="Equipo de escalada"
-              style={{ width: '100%', height: '110px', objectFit: 'cover', borderRadius: '8px', marginBottom: '14px' }}
+              style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px', marginBottom: '14px' }}
             />
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#f9fafb', marginBottom: '8px', marginTop: 0 }}>
               Reservar Equipo
@@ -60,9 +72,9 @@ export default function Welcome() {
 
           <div onClick={() => navigate('/calendario')} style={cardStyle}>
             <img
-              src="/images/ui/calendario-card.svg"
+              src={reservarHorarioImg}
               alt="Agenda de horarios"
-              style={{ width: '100%', height: '110px', objectFit: 'cover', borderRadius: '8px', marginBottom: '14px' }}
+              style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px', marginBottom: '14px' }}
             />
             <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#f9fafb', marginBottom: '8px', marginTop: 0 }}>
               Reservar Horario

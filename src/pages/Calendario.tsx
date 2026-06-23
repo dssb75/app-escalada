@@ -21,6 +21,11 @@ interface ReservaHorario {
   mine: boolean
 }
 
+interface PendingReservaHorario {
+  fecha: string
+  hora: string
+}
+
 export default function Calendario() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -33,14 +38,25 @@ export default function Calendario() {
   const [misReservas, setMisReservas] = useState<ReservaHorario[]>([])
   const [loadingSlots, setLoadingSlots] = useState(false)
   const [reservando, setReservando] = useState<string | null>(null)
+  const [pendingReserva, setPendingReserva] = useState<PendingReservaHorario | null>(null)
+  const [email, setEmail] = useState('')
   const [cancelandoId, setCancelandoId] = useState<number | null>(null)
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
 
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
   useEffect(() => {
-    api.getMisReservasHorario().then(setMisReservas)
-  }, [])
+    api.getMisReservasHorario()
+      .then(setMisReservas)
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.message.includes('Sesion expirada')) {
+          logout()
+          navigate('/login')
+        } else {
+          showToast(err instanceof Error ? err.message : 'Error cargando horarios', false)
+        }
+      })
+  }, [logout, navigate])
 
   useEffect(() => {
     if (selectedDate) {
@@ -74,19 +90,31 @@ export default function Calendario() {
     setTimeout(() => setToast(null), 3500)
   }
 
-  const handleReservar = async (hora: string) => {
+  const handleOpenConfirm = (hora: string) => {
     if (!selectedDate) return
-    setReservando(hora)
+    setPendingReserva({ fecha: selectedDate, hora })
+  }
+
+  const handleConfirmarReserva = async () => {
+    if (!pendingReserva || !email) return
+    setReservando(pendingReserva.hora)
     try {
-      await api.reservarHorario(selectedDate, hora)
-      showToast(`Horario ${hora} reservado`, true)
+      await api.reservarHorario(pendingReserva.fecha, pendingReserva.hora, email)
+      showToast(`Horario ${pendingReserva.hora} reservado para ${pendingReserva.fecha}`, true)
       const [updated, mis] = await Promise.all([
-        api.getHorariosOcupados(selectedDate),
+        api.getHorariosOcupados(pendingReserva.fecha),
         api.getMisReservasHorario(),
       ])
       setReservas(updated)
       setMisReservas(mis)
+      setPendingReserva(null)
+      setEmail('')
     } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('Sesion expirada')) {
+        logout()
+        navigate('/login')
+        return
+      }
       showToast(err instanceof Error ? err.message : 'Error al reservar', false)
     } finally {
       setReservando(null)
@@ -105,6 +133,11 @@ export default function Calendario() {
         setReservas(updated)
       }
     } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('Sesion expirada')) {
+        logout()
+        navigate('/login')
+        return
+      }
       showToast(err instanceof Error ? err.message : 'Error al cancelar', false)
     } finally {
       setCancelandoId(null)
@@ -255,7 +288,7 @@ export default function Calendario() {
                       <span style={{ fontSize: '12px', color: '#4b5563' }}>Ocupado</span>
                     ) : (
                       <button
-                        onClick={() => handleReservar(hora)}
+                        onClick={() => handleOpenConfirm(hora)}
                         disabled={reservando === hora}
                         style={{
                           padding: '4px 12px', background: '#f97316',
@@ -317,6 +350,67 @@ export default function Calendario() {
         </div>
       </main>
 
+      {pendingReserva && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 120, padding: '16px',
+        }}>
+          <div style={{
+            background: '#1f2937', border: '1px solid #374151',
+            borderRadius: '10px', padding: '28px',
+            width: '100%', maxWidth: '380px',
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '4px', fontSize: '17px', fontWeight: 700 }}>
+              Confirmar reserva
+            </h3>
+            <p style={{ color: '#9ca3af', fontSize: '13px', marginBottom: '16px', marginTop: 0 }}>
+              Revisa la información antes de guardar y enviar el correo.
+            </p>
+            <div style={{ marginBottom: '18px', padding: '10px 12px', borderRadius: '8px', background: '#111827', border: '1px solid #374151', color: '#cbd5e1', fontSize: '12px', lineHeight: 1.5 }}>
+              <div><strong style={{ color: '#f9fafb' }}>Fecha:</strong> {pendingReserva.fecha}</div>
+              <div><strong style={{ color: '#f9fafb' }}>Hora:</strong> {pendingReserva.hora}</div>
+              <div><strong style={{ color: '#f9fafb' }}>Usuario:</strong> {user?.nombre}</div>
+            </div>
+            <label style={labelStyle}>Correo electrónico</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="tu-correo@ejemplo.com"
+              style={{
+                ...inputStyle,
+                marginBottom: '18px',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => { setPendingReserva(null); setEmail('') }}
+                style={{
+                  flex: 1, padding: '10px',
+                  background: 'transparent', border: '1px solid #374151',
+                  borderRadius: '7px', color: '#9ca3af', cursor: 'pointer', fontSize: '13px',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmarReserva}
+                disabled={!!reservando || !email}
+                style={{
+                  flex: 1, padding: '10px',
+                  background: reservando ? '#374151' : '#f97316', border: 'none',
+                  borderRadius: '7px', color: '#fff', fontWeight: 600,
+                  cursor: reservando || !email ? 'not-allowed' : 'pointer', fontSize: '13px',
+                }}
+              >
+                {reservando ? 'Reservando...' : 'Confirmar reserva'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div style={{
           position: 'fixed', bottom: '24px', right: '24px',
@@ -341,4 +435,16 @@ const navBtn: React.CSSProperties = {
   padding: '5px 12px', background: '#1f2937',
   border: '1px solid #374151', borderRadius: '6px',
   color: '#f9fafb', cursor: 'pointer', fontSize: '18px', lineHeight: 1,
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block', marginBottom: '6px',
+  fontSize: '13px', color: '#d1d5db', fontWeight: 500,
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px',
+  background: '#111827', border: '1px solid #374151',
+  borderRadius: '7px', color: '#f9fafb', fontSize: '14px',
+  outline: 'none', boxSizing: 'border-box',
 }
