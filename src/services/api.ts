@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8080'
+const BASE = '/api'
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('escalada_token')
