@@ -52,7 +52,7 @@ export default function Login() {
             alt="Escalada"
             style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover' }}
           />
-          <h1 style={{ color: '#f9fafb', fontSize: '24px', margin: 0, fontWeight: 700 }}>EscaLab</h1>
+          <h1 style={{ color: '#f9fafb', fontSize: '24px', margin: 0, fontWeight: 700 }}>EscaLab-Test</h1>
         </div>
         <p style={{ color: '#9ca3af', marginBottom: '28px', fontSize: '14px', marginTop: '4px' }}>
           Reservas de escalada deportiva
